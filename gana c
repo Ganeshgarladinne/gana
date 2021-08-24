@@ -1,0 +1,43 @@
+#gana
+File save hooks
+===============
+You can configure functions that are run whenever a file is saved. There are
+two hooks available:
+* ``ContentsManager.pre_save_hook`` runs on the API path and model with
+  content. This can be used for things like stripping output that people don't
+  like adding to VCS noise.
+* ``FileContentsManager.post_save_hook`` runs on the filesystem path and model
+  without content. This could be used to commit changes after every save, for
+  instance.
+
+They are both called with keyword arguments::
+They are both called with keyword arguments:
+
+.. code-block:: python
+    pre_save_hook(model=model, path=path, contents_manager=cm)
+    post_save_hook(model=model, os_path=os_path, contents_manager=cm)
+@@ -21,7 +23,9 @@ Examples
+
+These can both be added to :file:`jupyter_notebook_config.py`.
+
+A pre-save hook for stripping output::
+A pre-save hook for stripping output:
+
+.. code-block:: python
+    def scrub_output_pre_save(model, **kwargs):
+        """scrub output before saving notebooks"""
+        # only run on notebooks
+        if model['type'] != 'notebook':
+            return
+        # only run on nbformat v4
+        if model['content']['nbformat'] != 4:
+            return
+        for cell in model['content']['cells']:
+            if cell['cell_type'] != 'code':
+                continue
+            cell['outputs'] = []
+            cell['execution_count'] = None
+    c.FileContentsManager.pre_save_hook = scrub_output_pre_save
+A post-save hook to make a script equivalent whenever the notebook is saved
+(replacing the ``--script`` option in older versions of the notebook):
+.. code-block:: python
